@@ -18,8 +18,13 @@ except Exception as e:
 class DummyHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
+        self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(b"Agent is running!")
+        self.wfile.write(b"Agent is running fine!")
+
+    def log_message(self, format, *args):
+        # Suppress routine http logs to keep console clean
+        return
 
 
 def start_web_server():
