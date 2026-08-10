@@ -1,40 +1,39 @@
 import os
 import time
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
 
-TARGET_URL = os.environ.get("TARGET_URL", "")
-REFRESH_INTERVAL = int(os.environ.get("REFRESH_INTERVAL", 420))
 
-def run_cloud_agent():
-    print(f"[Agent Initiating] Target:{TARGET_URL}")
+# --- The Dummy Web Server ---
+class DummyHandler(BaseHTTPRequestHandler):
+    def do_get(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Agent is running!")
+
+
+def start_web_server():
+    server = HTTPServer(('0.0.0.0', int(os.environ.get("PORT", 8080))), DummyHandler) # type: ignore
+    server.serve_forever()
+
+
+# --- The Agent Logic ---
+def run_agent():
+    target_url = os.environ.get("TARGET_URL", "https://pers-port.onrender.com/")
+    refresh_interval = int(os.environ.get("REFRESH_INTERVAL", 300))
 
     with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args = [
-                "--no-sandbox",
-                "--disable-setuid-sandbox",
-                "--disable-dev-shm-usage",
-                "disable-gpu",
-            ]
-        )
-        context = browser.new_context()
-        page = context.new_page()
+        browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+        page = browser.new_page()
+        while True:
+            page.goto(target_url)
+            time.sleep(refresh_interval)
 
-        print("[Agent Ready] Cloud browser launched successfully!")
 
-        try:
-            while True:
-                print(f"[{time.strftime('%H:%M:%S')}] Refreshing target page...")
-                page.goto(TARGET_URL, wait_until="networkidle")
-                print(f"[{time.strftime('%H:%M:%S')}] Page loaded successfully! Waiting for {REFRESH_INTERVAL} seconds...")
-
-                time.sleep(REFRESH_INTERVAL)
-
-        except Exception as e:
-            print(f"[Error Encountered]: {e}")
-        finally:
-            browser.close()
-
+# --- Start Both ---
 if __name__ == "__main__":
-    run_cloud_agent()
+    # Start web server in background thread
+    threading.Thread(target=start_web_server, daemon=True).start()
+    # Run agent in main thread
+    run_agent()
