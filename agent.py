@@ -1,20 +1,29 @@
 import os
 import time
 import threading
+import subprocess
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from playwright.sync_api import sync_playwright
+
+# Auto-install Playwright browsers on startup if missing
+try:
+    import playwright
+
+    subprocess.run(["playwright", "install", "chromium"], check=True)
+except Exception as e:
+    print(f"Browser auto-install notice: {e}")
 
 
 # --- The Dummy Web Server ---
 class DummyHandler(BaseHTTPRequestHandler):
-    def do_get(self):
+    def do_GET(self):
         self.send_response(200)
         self.end_headers()
         self.wfile.write(b"Agent is running!")
 
 
 def start_web_server():
-    server = HTTPServer(('0.0.0.0', int(os.environ.get("PORT", 8080))), DummyHandler) # type: ignore
+    server = HTTPServer(('0.0.0.0', int(os.environ.get("PORT", 8080))), DummyHandler)  # type: ignore
     server.serve_forever()
 
 
