@@ -21,6 +21,7 @@ class DummyHandler(BaseHTTPRequestHandler):
         self.send_header("Content-type", "text/plain")
         self.end_headers()
         self.wfile.write(b"Agent is running fine!")
+        self.wfile.write(b"Agent is active")
 
     def log_message(self, format, *args):
         # Suppress routine http logs to keep console clean
@@ -35,7 +36,7 @@ def start_web_server():
 # --- The Agent Logic ---
 def run_agent():
     target_url = os.environ.get("TARGET_URL", "https://pers-port.onrender.com/")
-    refresh_interval = int(os.environ.get("REFRESH_INTERVAL", 300))
+    refresh_interval = int(os.environ.get("REFRESH_INTERVAL", 420))
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
