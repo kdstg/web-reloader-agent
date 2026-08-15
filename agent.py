@@ -20,8 +20,8 @@ class DummyHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.write(b"Agent is running fine!")
-        self.wfile.write(b"Agent is active")
+        self.wfile.write(b"Agent is running fine!\n")
+        self.wfile.write(b" Agent is active")
 
     def log_message(self, format, *args):
         # Suppress routine http logs to keep console clean
